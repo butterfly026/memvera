@@ -147,45 +147,87 @@ class LeadsController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \App\Http\Requests\Lead\LeadForm $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(LeadForm $request)
-    {
+    // /**
+    //  * Store a newly created resource in storage.
+    //  *
+    //  * @param \App\Http\Requests\Lead\LeadForm $request
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function store(LeadForm $request)
+    // {
 
-        Event::dispatch('lead.create.before');
+    //     Event::dispatch('lead.create.before');
 
-        $data = request()->all();
+    //     $data = request()->all();
 
-        $data['status'] = 1;
+    //     $data['status'] = 1;
 
-        Log::info('aaaa ' . $data['lead_pipeline_stage_id']);
-        if ($data['lead_pipeline_stage_id']) {
-            $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
-            $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
-        } else {
-            $pipeline = $this->pipelineRepository->getDefaultPipeline();
+    //     Log::info('aaaa ' . $data['lead_pipeline_stage_id']);
+    //     if ($data['lead_pipeline_stage_id']) {
+    //         $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
+    //         $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
+    //     } else {
+    //         $pipeline = $this->pipelineRepository->getDefaultPipeline();
 
-            $stage = $pipeline->stages()->first();
+    //         $stage = $pipeline->stages()->first();
 
-            $data['lead_pipeline_id'] = $pipeline->id;
+    //         $data['lead_pipeline_id'] = $pipeline->id;
 
-            $data['lead_pipeline_stage_id'] = $stage->id;
-        }
+    //         $data['lead_pipeline_stage_id'] = $stage->id;
+    //     }
         
-        if (in_array($stage->code, ['won', 'lost'])) {
-            $data['closed_at'] = Carbon::now();
-        }
-        $lead = $this->leadRepository->create($data);
-        Event::dispatch('lead.create.after', $lead);
+    //     if (in_array($stage->code, ['won', 'lost'])) {
+    //         $data['closed_at'] = Carbon::now();
+    //     }
+    //     $lead = $this->leadRepository->create($data);
+    //     Event::dispatch('lead.create.after', $lead);
 
-        // session()->flash('success', trans('admin::app.leads.create-success'));
+    //     // session()->flash('success', trans('admin::app.leads.create-success'));
 
-        return redirect()->route('dashboards.leads.index');
+    //     return redirect()->route('dashboards.leads.index');
+    // }
+
+    /**
+ * Store a newly created resource in storage.
+ *
+ * @param \App\Http\Requests\Lead\LeadForm $request
+ * @return \Illuminate\Http\Response
+ */
+public function store(LeadForm $request)
+{
+
+    Event::dispatch('lead.create.before');
+
+    $data = request()->all();
+
+    $data['status'] = 1;
+
+    Log::info('aaaa ' . ($data['lead_pipeline_stage_id'] ?? '')); // Check if lead_pipeline_stage_id exists
+
+    if (isset($data['lead_pipeline_stage_id'])) {
+        $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
+        $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
+    } else {
+        $pipeline = $this->pipelineRepository->getDefaultPipeline();
+
+        $stage = $pipeline->stages()->first();
+
+        $data['lead_pipeline_id'] = $pipeline->id;
+
+        $data['lead_pipeline_stage_id'] = $stage->id;
     }
+    
+    if (in_array($stage->code, ['won', 'lost'])) {
+        $data['closed_at'] = Carbon::now();
+    }
+    $lead = $this->leadRepository->create($data);
+    Event::dispatch('lead.create.after', $lead);
+
+    // session()->flash('success', trans('admin::app.leads.create-success'));
+
+    return redirect()->route('dashboards.leads.index');
+}
+
 
     /**
      * Display a resource.
@@ -236,7 +278,7 @@ class LeadsController extends Controller
             $pipeline = $this->pipelineRepository->getDefaultPipeline();
 
             $stage = $pipeline->stages()->first();
-
+            
             $data['lead_pipeline_id'] = $pipeline->id;
 
             $data['lead_pipeline_stage_id'] = $stage->id;
@@ -245,20 +287,6 @@ class LeadsController extends Controller
         $lead = $this->leadRepository->update($data, $id);
 
         Event::dispatch('lead.update.after', $lead);
-
-        // if (request()->ajax()) {
-        //     return response()->json([
-        //         'message' => trans('admin::app.leads.update-success'),
-        //     ]);
-        // } else {
-        //     session()->flash('success', trans('admin::app.leads.update-success'));
-
-        //     if (request()->has('closed_at')) {
-        //         return redirect()->back();
-        //     } else {
-        //         return redirect()->route('admin.leads.index', $data['lead_pipeline_id']);
-        //     }
-        // }
     }
 
     /**

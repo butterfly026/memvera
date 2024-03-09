@@ -39,6 +39,7 @@ import { leads } from "@/common/data";
 import simplebar from "simplebar-vue"
 import InputSearchList from '@/Components/InputSearchList.vue';
 import ProductInfo from '@/Components/products/ProuctItemInput.vue';
+import axios from 'axios';
 
 export default {
   data() {
@@ -78,42 +79,42 @@ export default {
   },
   mounted: () => {
   },
+
+  // these are methods to allow user to select
   methods: {
+    selectSource(value) {
+      this.detail_info.lead_source = value;
+    },
+    selectType(value) {
+    this.detail_info.lead_type = value;
+  },
+  selectSalesOwner(value){
+    this.detail_info.sales_owner=value;
+  },
     submitCustomForm(req_stage_id) {
       this.customValidation = true;
       this.detail_info.lead_pipeline_stage_id = req_stage_id;
-      const form = useForm({});
-      form.transform(data => ({
+
+      const formData = {
         ...this.detail_info,
         person: this.person_info,
         entity_type: 'leads',
         status: 1,
         lead_pipeline_id: 1,
-      })).post(route('dashboards.leads.store'), {
-        onFinish: () => {
-          // window.location.href = '/apps/leads';
-        },
-        onError: (error) => {
+      };
 
-        }
-      });
-
-      // router.post(route('dashboards.leads.store'), {
-      //   ...this.detail_info,
-      //   person: this.person_info,
-      //   entity_type: 'leads',
-      //   status: 1,
-      //   lead_pipeline_id: 1,
-      // }, {
-      //   preserveScroll: true,
-      //   onSuccess: () => {
-
-      //   },
-      //   onFinish: () => {
-      //   },
-      // });
+      axios.post('/apps/leads/create', formData)
+        .then(response => {
+          // Handle successful response
+          alert("Lead added successfully!");
+          window.location.href = '/apps/leads';
+        })
+        .catch(error => {
+  // Handle error
+  console.error(error.response.data);
+  alert("Failed to add leader");
+});
     },
-
     getTotalValueOfPipeline(lead_data) {
       let total_price = 0;
       if (lead_data.leads && lead_data.leads.length > 0) {
@@ -124,16 +125,16 @@ export default {
       return total_price == 0 ? '' : ('$' + total_price.toFixed(2));
     },
     addEmail() {
-      this.emails.push({ value: '', type: 'work' });
+      this.person_info.emails.push({ value: '', label: 'work' });
     },
     removeEmail(index) {
-      this.emails.splice(index, 1);
+      this.person_info.emails.splice(index, 1);
     },
     addPhone() {
-      this.phones.push({ number: '', type: 'work' });
+      this.person_info.phones.push({ value: '', label: 'work' });
     },
     removePhone(index) {
-      this.phones.splice(index, 1);
+      this.person_info.phones.splice(index, 1);
     },
     addProduct() {
       this.products.push({ name: '', price: 0, quantity: 0 });
@@ -141,20 +142,6 @@ export default {
     removeProduct(index) {
       this.products.splice(index, 1);
     },
-    // async submitForm() {
-    //   const formData = {
-    //     emails: this.emails,
-    //     phones: this.phones,
-    //   };
-    //   try {
-    //     const response = await axios.post('YOUR_API_ENDPOINT', formData);
-    //     console.log(response.data);
-    //     // Handle response or redirect, etc.
-    //   } catch (error) {
-    //     console.error(error);
-    //     // Handle error, show message, etc.
-    //   }
-    // },
   },
   components: {
     Layout,
@@ -211,38 +198,71 @@ export default {
                           v-model="detail_info.lead_value" />
                         <BFormInvalidFeedback>Please provide Lead Value.</BFormInvalidFeedback>
                       </div>
-                      <div class="mb-3">
-                        <label for="source" class="form-label required">Source</label>
-                        <BFormSelect class="form-select" id="source" required v-model="detail_info.lead_source_id">
-                          <option selected disabled value="0">Choose...</option>
-                          <option v-for="(source, index) in getAttributeValues('lead_sources')" :value="source.id"
-                            :key="index">
-                            {{ source.name }}
-                          </option>
-                        </BFormSelect>
-                        <BFormInvalidFeedback>Please select a valid Source.</BFormInvalidFeedback>
-                      </div>
-                      <div class="mb-3">
-                        <label for="lead_type" class="form-label required">Type</label>
-                        <BFormSelect class="form-select" id="lead_type" required v-model="detail_info.lead_type_id">
-                          <option selected disabled value="0">Choose...</option>
-                          <option v-for="(source, index) in getAttributeValues('lead_types')" :value="source.id"
-                            :key="index">
-                            {{ source.name }}
-                          </option>
-                        </BFormSelect>
-                        <BFormInvalidFeedback>Please select a valid Type.</BFormInvalidFeedback>
-                      </div>
-                      <div class="mb-3">
-                        <label for="salesOwner" class="form-label">Sales Owner</label>
-                        <BFormSelect class="form-select" id="salesOwner" v-model="detail_info.user_id">
-                          <option selected disabled value="0">Choose...</option>
-                          <option v-for="(source, index) in getAttributeValues('users')" :value="source.id"
-                            :key="index">
-                            {{ source.name }}
-                          </option>
-                        </BFormSelect>
-                      </div>
+
+<div class="mb-3">
+  <label for="source" class="form-label required">Source</label>
+  <input
+    type="text"
+    class="form-control"
+    id="source"
+    v-model="detail_info.lead_source"
+    list="sources"
+    placeholder="Type or select a source"
+    @change="selectSource($event.target.value)"
+    required
+  />
+  <datalist id="sources">
+    <option v-for="source in getAttributeValues('lead_sources')" :value="source.name" :key="source.id">
+      {{ source.name }}
+    </option>
+  </datalist>
+  <BFormInvalidFeedback>Please select or type a source</BFormInvalidFeedback>
+</div>
+
+<!-- this is codes for  type and select type -->
+<div class="mb-3">
+  <label for="lead_type" class="form-label required">Type</label>
+  <input
+    type="text"
+    class="form-control"
+    id="lead_type"
+    v-model="detail_info.lead_type"
+    list="types"
+    placeholder="Type or select a type"
+    @change="selectType($event.target.value)"
+    required
+  />
+  <datalist id="types">
+    <option v-for="type in getAttributeValues('lead_types')" :value="type.name" :key="type.id">
+      {{ type.name }}
+    </option>
+  </datalist>
+  <BFormInvalidFeedback>Please select or type a type</BFormInvalidFeedback>
+</div>
+
+<div class="mb-3">
+  <label for="salesOwner" class="form-label required">Sales Owner</label>
+  <input
+    type="text"
+    class="form-control"
+    id="salesOwner"
+    v-model="detail_info.sales_owner"
+    list="owners"
+    placeholder="Type or select a sales owner"
+    @change="selectSalesOwner($event.target.value)"
+    required
+  />
+  <datalist id="owners">
+    <option v-for="owner in getAttributeValues('users')" :value="owner.name" :key="owner.id">
+      {{ owner.name }}
+    </option>
+  </datalist>
+  <BFormInvalidFeedback>Please select or type a sales owner</BFormInvalidFeedback>
+</div>
+
+                     <!-- this is the codes for date -->
+
+
                       <div class="mb-3">
                         <label for="closeDate" class="form-label">Expected Close Date</label>
                         <flat-pickr v-model="date1" class="form-control"></flat-pickr>
