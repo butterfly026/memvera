@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Foundation\AliasLoader;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,12 +16,24 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         //
+        $loader = AliasLoader::getInstance();
+
+        $loader->alias('Bouncer', \App\Facades\Core\Bouncer::class);
+        // $loader->alias('Menu', \Webkul\Admin\Facades\Menu::class);
+
+        $this->app->singleton('bouncer', function () {
+            return new \App\Core\Bouncer();
+        });
+
+        // $this->app->singleton('menu', function () {
+        //     return new \Webkul\Admin\Menu();
+        // });
     }
 
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(Router $router): void
     {
         Schema::defaultStringLength(191);
         Relation::morphMap([
@@ -29,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
             'organizations' => 'App\DataStructure\Contact\Models\Organization',
             'quotes'        => 'App\DataStructure\Quote\Models\Quote',
         ]);
+        $router->aliasMiddleware('user', \App\Http\Middleware\Bouncer::class);
         $this->app->register(EventServiceProvider::class);
     }
 }

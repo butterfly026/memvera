@@ -9,7 +9,7 @@ const state = {
   sidebarColor: 'light',
   sidebarImage: 'none',
   preloader: 'disable',
-  visibility: 'show'
+  visibility: 'show',
 };
 
 const mutations = {

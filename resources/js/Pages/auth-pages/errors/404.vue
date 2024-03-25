@@ -1,6 +1,6 @@
 <script>
 import { Link, Head } from '@inertiajs/vue3';
-import animationData from "@/Components/widgets/etwtznjn.json";
+import animationData from "@/Components/widgets/json_data/etwtznjn.json";
 import Lottie from "@/Components/widgets/lottie.vue";
 
 export default {

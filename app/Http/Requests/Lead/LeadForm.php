@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Modules\Validations\Decimal;
 use App\Repositories\Attribute\AttributeRepository;
 use App\Repositories\Attribute\AttributeValueRepository;
+use Illuminate\Support\Facades\Log;
 
 class LeadForm extends FormRequest
 {
@@ -77,7 +78,6 @@ class LeadForm extends FormRequest
 
                 return $query;
             })->get();
-
             foreach ($attributes as $attribute) {
                 if ($entityType == 'persons') {
                     $attribute->code = 'person.' . $attribute->code;
@@ -129,6 +129,7 @@ class LeadForm extends FormRequest
                 }
 
                 if ($attribute->is_unique) {
+                    Log::error('not_unique_value ' . json_encode($attribute));
                     array_push($validations[in_array($attribute->type, ['email', 'phone'])
                         ? $attribute->code . '.*.value'
                         : $attribute->code

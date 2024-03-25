@@ -62,8 +62,71 @@ class LeadsController extends Controller
 
     public function leads_index_page()
     {
-        return Inertia::render('dashboards/leads/index');
+        if (!$pipelineId = request('pipeline_id')) {
+            $pipelineId = $this->pipelineRepository->getDefaultPipeline()->id;
+        }
+        $pipelines = $this->pipelineRepository->all();
+        $currencyCode = core()->currencySymbol(config('app.currency'));
+        return Inertia::render('dashboards/leads/index', [
+            'pipelineId' => $pipelineId,
+            'pipelines' => $pipelines,
+            'currencyCode' => $currencyCode,
+        ]);
     }
+
+    public function lead_view_page($id)
+    {
+        $lead = $this->leadRepository->with(['tags', 'person', 'person.organization', 'products', 'stage', 'pipeline', 'pipeline.stages'])->findOrFail($id);
+
+        $currentUser = auth()->user();
+
+        if ($currentUser->view_permission != 'global') {
+            if ($currentUser->view_permission == 'group') {
+                $userIds = app('\Webkul\User\Repositories\UserRepository')->getCurrentUserGroupsUserIds();
+
+                if (! in_array($lead->user_id, $userIds)) {
+                    return redirect()->route('dashboards.leads.index');
+                }
+            } else {
+                if ($lead->user_id != $currentUser->id) {
+                    return redirect()->route('dashboards.leads.index');
+                }
+            }
+        }
+        $currencyCode = core()->currencySymbol(config('app.currency'));
+        $customAttributes = app('App\Repositories\Attribute\AttributeRepository')->findWhere([
+            'entity_type' => 'leads',
+            'quick_add'   => 1
+        ]);
+        $organizationAttribute = app('App\Repositories\Attribute\AttributeRepository')->findOneWhere([
+            'entity_type' => 'persons',
+            'code'        => 'organization_id'
+        ]);
+        $customAttributes->transform(function ($attribute) {
+            $options = $attribute->lookup_type ? app('App\Repositories\Attribute\AttributeRepository')->getLookUpOptions($attribute->lookup_type)
+                : $attribute->options()->orderBy('sort_order')->get();
+            $attribute['options'] = $options;
+            return $attribute;
+        });
+        $currencyCode = core()->currencySymbol(config('app.currency'));
+        $activities = app('\App\Repositories\Lead\LeadRepository')->getAllActivities($lead->id);
+        $quotes = $lead->quotes()->with(['person', 'user'])->get();
+        return Inertia::render('dashboards/leads/view', [
+            'lead' => $lead,
+            'person' => $lead->person,
+            'personOrganization' => $lead->person->organization,
+            'products' => $lead->products,
+            'customAttributes' => $customAttributes,
+            'organizationAttribute' => $organizationAttribute,
+            'currencyCode' => $currencyCode,
+            'currentStage' => $lead->stage,
+            'customStages' => $lead->pipeline->stages,
+            'activities' => $activities,
+            'quotes' => $quotes,
+        ]);
+    }
+
+    
 
     public function create_lead_page()
     {
@@ -72,24 +135,21 @@ class LeadsController extends Controller
             'entity_type' => 'leads',
             'quick_add'   => 1
         ]);
-        $organizationAttributes = app('App\Repositories\Attribute\AttributeRepository')->findWhere([
-            'entity_type' => 'organizations',
+        $organizationAttribute = app('App\Repositories\Attribute\AttributeRepository')->findOneWhere([
+            'entity_type' => 'persons',
+            'code'        => 'organization_id'
         ]);
-        $customAttributes->transform(function ($attribute){
+        $customAttributes->transform(function ($attribute) {
             $options = $attribute->lookup_type ? app('App\Repositories\Attribute\AttributeRepository')->getLookUpOptions($attribute->lookup_type)
                 : $attribute->options()->orderBy('sort_order')->get();
             $attribute['options'] = $options;
             return $attribute;
         });
-        $organizationAttributes->transform(function ($attribute){
-            $options = $attribute->lookup_type ? app('App\Repositories\Attribute\AttributeRepository')->getLookUpOptions($attribute->lookup_type)
-                : $attribute->options()->orderBy('sort_order')->get();
-            $attribute['options'] = $options;
-            return $attribute;
-        });
+        $currencyCode = core()->currencySymbol(config('app.currency'));
         return Inertia::render('dashboards/leads/create', [
             'customAttributes' => $customAttributes,
-            'organizationAttributes' => $organizationAttributes,
+            'organizationAttribute' => $organizationAttribute,
+            'currencyCode' => $currencyCode,
             'stage_id' => $stage_id ?? 1,
         ]);
     }
@@ -147,87 +207,52 @@ class LeadsController extends Controller
         }
     }
 
-    // /**
-    //  * Store a newly created resource in storage.
-    //  *
-    //  * @param \App\Http\Requests\Lead\LeadForm $request
-    //  * @return \Illuminate\Http\Response
-    //  */
-    // public function store(LeadForm $request)
-    // {
-
-    //     Event::dispatch('lead.create.before');
-
-    //     $data = request()->all();
-
-    //     $data['status'] = 1;
-
-    //     Log::info('aaaa ' . $data['lead_pipeline_stage_id']);
-    //     if ($data['lead_pipeline_stage_id']) {
-    //         $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
-    //         $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
-    //     } else {
-    //         $pipeline = $this->pipelineRepository->getDefaultPipeline();
-
-    //         $stage = $pipeline->stages()->first();
-
-    //         $data['lead_pipeline_id'] = $pipeline->id;
-
-    //         $data['lead_pipeline_stage_id'] = $stage->id;
-    //     }
-        
-    //     if (in_array($stage->code, ['won', 'lost'])) {
-    //         $data['closed_at'] = Carbon::now();
-    //     }
-    //     $lead = $this->leadRepository->create($data);
-    //     Event::dispatch('lead.create.after', $lead);
-
-    //     // session()->flash('success', trans('admin::app.leads.create-success'));
-
-    //     return redirect()->route('dashboards.leads.index');
-    // }
+    public function getActivities($leadId)
+    {
+        $activities = app('\App\Repositories\Lead\LeadRepository')->getAllActivities($leadId);
+        return response()->json([
+            'activities' => $activities,
+        ]);
+    }
 
     /**
- * Store a newly created resource in storage.
- *
- * @param \App\Http\Requests\Lead\LeadForm $request
- * @return \Illuminate\Http\Response
- */
-public function store(LeadForm $request)
-{
+     * Store a newly created resource in storage.
+     *
+     * @param \App\Http\Requests\Lead\LeadForm $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(LeadForm $request)
+    {
 
-    Event::dispatch('lead.create.before');
+        Event::dispatch('lead.create.before');
 
-    $data = request()->all();
+        $data = request()->all();
+        Log::info("..create...\n" . json_encode($data));
+        $data['status'] = 1;
 
-    $data['status'] = 1;
+        if ($data['lead_pipeline_stage_id']) {
+            $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
+            $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
+        } else {
+            $pipeline = $this->pipelineRepository->getDefaultPipeline();
 
-    Log::info('aaaa ' . ($data['lead_pipeline_stage_id'] ?? '')); // Check if lead_pipeline_stage_id exists
+            $stage = $pipeline->stages()->first();
 
-    if (isset($data['lead_pipeline_stage_id'])) {
-        $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
-        $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
-    } else {
-        $pipeline = $this->pipelineRepository->getDefaultPipeline();
+            $data['lead_pipeline_id'] = $pipeline->id;
 
-        $stage = $pipeline->stages()->first();
+            $data['lead_pipeline_stage_id'] = $stage->id;
+        }
 
-        $data['lead_pipeline_id'] = $pipeline->id;
+        if (in_array($stage->code, ['won', 'lost'])) {
+            $data['closed_at'] = Carbon::now();
+        }
+        $lead = $this->leadRepository->create($data);
+        Event::dispatch('lead.create.after', $lead);
 
-        $data['lead_pipeline_stage_id'] = $stage->id;
+        // session()->flash('success', trans('app.leads.create-success'));
+
+        return redirect()->route('dashboards.leads.index');
     }
-    
-    if (in_array($stage->code, ['won', 'lost'])) {
-        $data['closed_at'] = Carbon::now();
-    }
-    $lead = $this->leadRepository->create($data);
-    Event::dispatch('lead.create.after', $lead);
-
-    // session()->flash('success', trans('admin::app.leads.create-success'));
-
-    return redirect()->route('dashboards.leads.index');
-}
-
 
     /**
      * Display a resource.
@@ -239,7 +264,7 @@ public function store(LeadForm $request)
     {
         $lead = $this->leadRepository->findOrFail($id);
 
-        $currentUser = auth()->guard('user')->user();
+        $currentUser = auth()->user();
 
         if ($currentUser->view_permission != 'global') {
             if ($currentUser->view_permission == 'group') {
@@ -255,7 +280,7 @@ public function store(LeadForm $request)
             }
         }
 
-        return view('admin::leads.view', compact('lead'));
+        return view('leads.view', compact('lead'));
     }
 
     /**
@@ -269,7 +294,7 @@ public function store(LeadForm $request)
     {
         Event::dispatch('lead.update.before', $id);
         $data = request()->all();
-
+        Log::info(json_encode($data));
         if ($data['lead_pipeline_stage_id']) {
             $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
 
@@ -278,7 +303,7 @@ public function store(LeadForm $request)
             $pipeline = $this->pipelineRepository->getDefaultPipeline();
 
             $stage = $pipeline->stages()->first();
-            
+
             $data['lead_pipeline_id'] = $pipeline->id;
 
             $data['lead_pipeline_stage_id'] = $stage->id;
@@ -287,6 +312,20 @@ public function store(LeadForm $request)
         $lead = $this->leadRepository->update($data, $id);
 
         Event::dispatch('lead.update.after', $lead);
+
+        if (request()->ajax()) {
+            return response()->json([
+                'message' => trans('app.leads.update-success'),
+            ]);
+        } else {
+            session()->flash('success', trans('app.leads.update-success'));
+
+            if (request()->has('closed_at')) {
+                return redirect()->back();
+            } else {
+                return redirect()->route('admin.leads.index', $data['lead_pipeline_id']);
+            }
+        }
     }
 
     /**
@@ -321,11 +360,11 @@ public function store(LeadForm $request)
             Event::dispatch('lead.delete.after', $id);
 
             return response()->json([
-                'message' => trans('admin::app.response.destroy-success', ['name' => trans('admin::app.leads.lead')]),
+                'message' => trans('app.response.destroy-success', ['name' => trans('app.leads.lead')]),
             ], 200);
         } catch (\Exception $exception) {
             return response()->json([
-                'message' => trans('admin::app.response.destroy-failed', ['name' => trans('admin::app.leads.lead')]),
+                'message' => trans('app.response.destroy-failed', ['name' => trans('app.leads.lead')]),
             ], 400);
         }
     }
@@ -350,7 +389,7 @@ public function store(LeadForm $request)
         }
 
         return response()->json([
-            'message' => trans('admin::app.response.update-success', ['name' => trans('admin::app.leads.title')])
+            'message' => trans('app.response.update-success', ['name' => trans('app.leads.title')])
         ]);
     }
 
@@ -370,7 +409,7 @@ public function store(LeadForm $request)
         }
 
         return response()->json([
-            'message' => trans('admin::app.response.destroy-success', ['name' => trans('admin::app.leads.title')]),
+            'message' => trans('app.response.destroy-success', ['name' => trans('app.leads.title')]),
         ]);
     }
 }

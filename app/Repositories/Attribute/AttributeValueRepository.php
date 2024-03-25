@@ -4,6 +4,7 @@ namespace App\Repositories\Attribute;
 
 use App\Core\Eloquent\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AttributeValueRepository extends Repository
@@ -149,8 +150,9 @@ class AttributeValueRepository extends Repository
      */
     public function sanitizeEmailAndPhone($data)
     {
+        Log::info(json_encode($data));
         foreach ($data as $key => $row) {
-            if (is_null($row['value'])) {
+            if (array_key_exists('value', $row) && is_null($row['value'])) {
                 unset($data[$key]);
             }
         }

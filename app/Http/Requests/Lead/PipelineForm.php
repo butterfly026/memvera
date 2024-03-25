@@ -59,7 +59,7 @@ class PipelineForm extends FormRequest
     public function messages()
     {
         return [
-            'stages.*.name.unique_key' => __('admin::app.settings.pipelines.duplicate-name'),
+            'stages.*.name.unique_key' => __('app.settings.pipelines.duplicate-name'),
         ];
     }
 

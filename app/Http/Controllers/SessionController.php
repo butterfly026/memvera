@@ -14,7 +14,7 @@ class SessionController extends Controller
      */
     public function create()
     {
-        if (auth()->guard('user')->check()) {
+        if (auth()->check()) {
             return redirect()->route('dashboards.index');
         } else {
             if (strpos(url()->previous(), 'admin') !== false) {
@@ -40,16 +40,16 @@ class SessionController extends Controller
             'password' => 'required',
         ]);
 
-        if (! auth()->guard('user')->attempt(request(['email', 'password']), request('remember'))) {
-            session()->flash('error', trans('admin::app.sessions.login.login-error'));
+        if (! auth()->attempt(request(['email', 'password']), request('remember'))) {
+            session()->flash('error', trans('app.sessions.login.login-error'));
 
             return redirect()->back();
         }
 
-        if (auth()->guard('user')->user()->status == 0) {
-            session()->flash('warning', trans('admin::app.sessions.login.activate-warning'));
+        if (auth()->user()->status == 0) {
+            session()->flash('warning', trans('app.sessions.login.activate-warning'));
 
-            auth()->guard('user')->logout();
+            auth()->logout();
 
             return redirect()->route('login');
         }
@@ -64,7 +64,7 @@ class SessionController extends Controller
      */
     public function destroy()
     {
-        auth()->guard('user')->logout();
+        auth()->logout();
 
         return redirect()->route('login');
     }

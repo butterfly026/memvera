@@ -8,6 +8,7 @@ use App\Repositories\Contact\PersonRepository;
 use Carbon\Carbon;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class LeadRepository extends Repository
@@ -108,7 +109,7 @@ class LeadRepository extends Repository
                     return $query->whereBetween('leads.created_at', $createdAtRange);
                 })
                 // ->where(function ($query) {
-                //     $currentUser = auth()->guard('user')->user();
+                //     $currentUser = auth()->user();
 
                 //     if ($currentUser->view_permission != 'global') {
                 //         if ($currentUser->view_permission == 'group') {
@@ -139,6 +140,7 @@ class LeadRepository extends Repository
 
         $stage = $this->stageRepository->find($data['lead_pipeline_stage_id']);
 
+        Log::info(json_encode($person));
         $lead = parent::create(array_merge([
             'person_id'              => $person->id,
             'lead_pipeline_id'       => 1,
@@ -236,7 +238,7 @@ class LeadRepository extends Repository
         $query = $this
             ->whereBetween('leads.created_at', [$startDate, $endDate])
             ->where(function ($query) {
-                if (($currentUser = auth()->guard('user')->user())->view_permission == "individual") {
+                if (($currentUser = auth()->user())->view_permission == "individual") {
                     $query->where('leads.user_id', $currentUser->id);
                 }
             });

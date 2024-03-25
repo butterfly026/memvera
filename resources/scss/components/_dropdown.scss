@@ -10,6 +10,12 @@
     content: "\F0140";
     font-family: "Material Design Icons";
 }
+.dropdown-toggle-no-caret::after {
+    display: none;
+}
+.dropdown-toggle.dropdown-toggle-no-caret::after {
+    content: none;
+}
 
 .dropdown-menu {
     box-shadow: $box-shadow-lg;

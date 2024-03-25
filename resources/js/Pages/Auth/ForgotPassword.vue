@@ -4,7 +4,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Lottie from "@/Components/widgets/lottie.vue";
-import animationData from "@/Components/widgets/rhvddzym.json";
+import animationData from "@/Components/widgets/json_data/rhvddzym.json";
 
 defineProps({
     status: String,

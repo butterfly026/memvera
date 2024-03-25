@@ -52,17 +52,17 @@ trait ProvideDropdownOptions
         return [
             [
                 'value'    => '',
-                'label'    => __('admin::app.common.select-options'),
+                'label'    => __('app.common.select-options'),
                 'disabled' => true,
                 'selected' => true,
             ],
             [
-                'label'    => trans('admin::app.datagrid.active'),
+                'label'    => trans('app.datagrid.active'),
                 'value'    => 1,
                 'disabled' => false,
                 'selected' => false,
             ], [
-                'label'    => trans('admin::app.datagrid.inactive'),
+                'label'    => trans('app.datagrid.inactive'),
                 'value'    => 0,
                 'disabled' => false,
                 'selected' => false,
@@ -80,18 +80,18 @@ trait ProvideDropdownOptions
         return [
             [
                 'value'    => '',
-                'label'    => __('admin::app.common.select-options'),
+                'label'    => __('app.common.select-options'),
                 'disabled' => true,
                 'selected' => true,
             ],
             [
                 'value'    => 0,
-                'label'    => __('admin::app.common.no'),
+                'label'    => __('app.common.no'),
                 'disabled' => false,
                 'selected' => false,
             ], [
                 'value'    => 1,
-                'label'    => __('admin::app.common.yes'),
+                'label'    => __('app.common.yes'),
                 'disabled' => false,
                 'selected' => false,
             ]
@@ -118,7 +118,7 @@ trait ProvideDropdownOptions
 
         return [
             [
-                'label'    => __('admin::app.common.select-users'),
+                'label'    => __('app.common.select-users'),
                 'value'    => '',
                 'disabled' => true,
                 'selected' => true,
@@ -147,7 +147,7 @@ trait ProvideDropdownOptions
 
         return [
             [
-                'label'    => __('admin::app.common.select-organization'),
+                'label'    => __('app.common.select-organization'),
                 'value'    => '',
                 'disabled' => true,
                 'selected' => true,
@@ -165,12 +165,12 @@ trait ProvideDropdownOptions
     {
         return [
             [
-                'label'    => trans('admin::app.settings.roles.all'),
+                'label'    => trans('app.settings.roles.all'),
                 'value'    => 'all',
                 'disabled' => false,
                 'selected' => false,
             ], [
-                'label'    => trans('admin::app.settings.roles.custom'),
+                'label'    => trans('app.settings.roles.custom'),
                 'value'    => 'custom',
                 'disabled' => false,
                 'selected' => false,
@@ -187,22 +187,22 @@ trait ProvideDropdownOptions
     {
         return [
             [
-                'label'    => trans('admin::app.common.select-type'),
+                'label'    => trans('app.common.select-type'),
                 'value'    => '',
                 'disabled' => true,
                 'selected' => true,
             ], [
-                'label'    => trans('admin::app.common.select-call'),
+                'label'    => trans('app.common.select-call'),
                 'value'    => 'call',
                 'disabled' => false,
                 'selected' => false,
             ], [
-                'label'    => trans('admin::app.common.select-meeting'),
+                'label'    => trans('app.common.select-meeting'),
                 'value'    => 'meeting',
                 'disabled' => false,
                 'selected' => false,
             ], [
-                'label'    => trans('admin::app.common.select-lunch'),
+                'label'    => trans('app.common.select-lunch'),
                 'value'    => 'lunch',
                 'disabled' => false,
                 'selected' => false,

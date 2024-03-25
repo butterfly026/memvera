@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DataGrids\Admin\Product;
+namespace App\DataGrids\Product;
 
 use App\DataGrids\DataGrid;
 use Illuminate\Support\Facades\DB;
@@ -37,21 +37,21 @@ class ProductDataGrid extends DataGrid
     {
         $this->addColumn([
             'index'    => 'sku',
-            'label'    => trans('admin::app.datagrid.sku'),
+            'label'    => trans('app.datagrid.sku'),
             'type'     => 'string',
             'sortable' => true,
         ]);
 
         $this->addColumn([
             'index'    => 'name',
-            'label'    => trans('admin::app.datagrid.name'),
+            'label'    => trans('app.datagrid.name'),
             'type'     => 'string',
             'sortable' => true,
         ]);
 
         $this->addColumn([
             'index'    => 'price',
-            'label'    => trans('admin::app.datagrid.price'),
+            'label'    => trans('app.datagrid.price'),
             'type'     => 'string',
             'sortable' => true,
             'closure'  => function ($row) {
@@ -61,7 +61,7 @@ class ProductDataGrid extends DataGrid
 
         $this->addColumn([
             'index'    => 'quantity',
-            'label'    => trans('admin::app.datagrid.quantity'),
+            'label'    => trans('app.datagrid.quantity'),
             'type'     => 'string',
             'sortable' => true,
         ]);
@@ -75,18 +75,18 @@ class ProductDataGrid extends DataGrid
     public function prepareActions()
     {
         $this->addAction([
-            'title'  => trans('ui::app.datagrid.edit'),
+            'title'  => trans('app.ui.datagrid.edit'),
             'method' => 'GET',
-            'route'  => 'admin.products.edit',
-            'icon'   => 'pencil-icon',
+            'route'  => 'products.edit',
+            'icon'   => 'ri-edit-2-line',
         ]);
 
         $this->addAction([
-            'title'        => trans('ui::app.datagrid.delete'),
+            'title'        => trans('app.ui.datagrid.delete'),
             'method'       => 'DELETE',
-            'route'        => 'admin.products.delete',
-            'confirm_text' => trans('ui::app.datagrid.massaction.delete', ['resource' => 'user']),
-            'icon'         => 'trash-icon',
+            'route'        => 'products.delete',
+            'confirm_text' => trans('app.ui.datagrid.massaction.delete', ['resource' => 'user']),
+            'icon'         => 'ri-delete-bin-5-line',
         ]);
     }
 
@@ -99,8 +99,8 @@ class ProductDataGrid extends DataGrid
     {
         $this->addMassAction([
             'type'   => 'delete',
-            'label'  => trans('ui::app.datagrid.delete'),
-            'action' => route('admin.products.mass_delete'),
+            'label'  => trans('app.ui.datagrid.delete'),
+            'action' => route('products.mass_delete'),
             'method' => 'PUT',
         ]);
     }

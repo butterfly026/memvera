@@ -27,7 +27,7 @@ class UserRepository extends Repository
             return $query->select('users.*')
                 ->leftJoin('user_groups', 'users.id', '=', 'user_groups.user_id')
                 ->leftJoin('groups', 'user_groups.group_id', 'groups.id')
-                ->whereIn('groups.id', auth()->guard('user')->user()->groups()->pluck('id'));
+                ->whereIn('groups.id', auth()->user()->groups()->pluck('id'));
         })->get()->pluck('id')->toArray();
 
         return $userIds;

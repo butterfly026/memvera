@@ -16,29 +16,29 @@ class Bouncer
      */
     public function handle($request, \Closure $next, $guard = 'user')
     {
-        // if (! auth()->guard($guard)->check()) {
-        //     return redirect()->route('login');
-        // }
+        if (! auth()->guard($guard)->check()) {
+            return redirect()->route('login');
+        }
 
-        // /**
-        //  * If user status is changed by admin. Then session should be
-        //  * logged out.
-        //  */
-        // if (! (bool) auth()->guard($guard)->user()->status) {
-        //     auth()->guard($guard)->logout();
+        /**
+         * If user status is changed by admin. Then session should be
+         * logged out.
+         */
+        if (! (bool) auth()->guard($guard)->user()->status) {
+            auth()->guard($guard)->logout();
 
-        //     return redirect()->route('login');
-        // }
+            return redirect()->route('login');
+        }
 
-        // /**
-        //  * If somehow the user deleted all permissions, then it should be
-        //  * auto logged out and need to contact the administrator again.
-        //  */
-        // if ($this->isPermissionsEmpty()) {
-        //     auth()->guard($guard)->logout();
+        /**
+         * If somehow the user deleted all permissions, then it should be
+         * auto logged out and need to contact the administrator again.
+         */
+        if ($this->isPermissionsEmpty()) {
+            auth()->guard($guard)->logout();
 
-        //     return redirect()->route('login');
-        // }
+            return redirect()->route('login');
+        }
 
         return $next($request);
     }
@@ -50,7 +50,7 @@ class Bouncer
      */
     public function isPermissionsEmpty()
     {
-        if (! $role = auth()->guard('user')->user()->role) {
+        if (! $role = auth()->user()->role) {
             abort(401, 'This action is unauthorized.');
         }
 

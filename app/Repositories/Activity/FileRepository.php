@@ -54,7 +54,7 @@ class FileRepository extends Repository
             'is_done' => 1,
             'type'    => 'file',
             'comment' => $data['comment'],
-            'user_id' => auth()->guard('user')->user()->id,
+            'user_id' => auth()->user()->id,
         ]);
 
         return parent::create([
